@@ -1,0 +1,1 @@
+/vagrant/zsim_simulator/src/detailed_mem_params.cpp
