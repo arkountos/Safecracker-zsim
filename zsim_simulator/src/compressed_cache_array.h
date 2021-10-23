@@ -88,6 +88,7 @@ class CacheArray
         // is somehow limited. The original implementation has number of entries = bytes,
         // which means 64X more tags for 64B cache lines.
         uint32_t extraTagRatio;
+	const char * compressionAlgorithm;
 
         friend class compressed::Cands;
 };

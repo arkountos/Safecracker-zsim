@@ -177,7 +177,7 @@ BaseCache* BuildCacheBank(Config& config, const string& prefix, g_string& name, 
 	 * START OF MY INSERTED CODE 
 	 *
 	 */
-	uint32_t compressionAlgorithm = config.get<const char*>(prefix + "array.compressionAlgorithm");
+	const char * compressionAlgorithm = config.get<const char*>(prefix + "array.compressionAlgorithm");
 
 	
         array = new compressed::CacheArray(numLines, ways, hf, extraTagRatio, compressionAlgorithm);

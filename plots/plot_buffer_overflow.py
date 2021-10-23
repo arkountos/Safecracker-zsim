@@ -51,8 +51,9 @@ plt.xticks(y_pos, objects)
 # blue = mpatches.Patch(facecolor=c2, label='attacker')
 green = mpatches.Patch(facecolor=c3, hatch='//', label='victim dynamic')
 orange = mpatches.Patch(facecolor=c4, label='attacker dynamic')
-plt.legend([# red, blue,
-                    green, orange])
+plt.legend(#[# red, blue,
+                   # green, orange]
+                   )
 
 def savepdfviasvg(fig, name, **kwargs):
     import subprocess
