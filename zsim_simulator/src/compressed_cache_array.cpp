@@ -11,12 +11,14 @@ CacheArray::CacheArray(
     uint32_t _numBlocks,
     uint32_t _associativity,
     HashFamily* _hf,
-    uint32_t _extraTagRatio)
+    uint32_t _extraTagRatio,
+    const char* _compressionAlgorithm)
         : blockSize(zinfo->lineSize)
         , associativity(_associativity)
         , rp(0)
         , hf(_hf)
-        , extraTagRatio(_extraTagRatio) {
+        , extraTagRatio(_extraTagRatio)
+	, compressionAlgorithm(_compressionAlgorithm) {
 
     numSets = _numBlocks / _associativity;
     setSizeInBytes = blockSize * _associativity;
@@ -58,7 +60,7 @@ int32_t CacheArray::lookup(const Address lineAddr, const MemReq* req, bool updat
             // if size of the line changes on a write, we may be
             // forced to evict lines to make space
             if (!IsGet(req->type)) {
-                uint32_t compressedSize = getCompressedSizeFromAddr(req->lineAddr);
+                uint32_t compressedSize = getCompressedSizeFromAddr(req->lineAddr, compressionAlgorithm);
                 // bigger lines need space: make space for the line, starting by evicting it
                 if (compressedSize > entries[id].size) {
                     entries[id].lineAddr = 0; // this makes sure the replacement policy won't try to evict id
@@ -137,7 +139,7 @@ void CacheArray::makeSpace(uint32_t set, uint32_t requiredSpace, const MemReq* r
 uint32_t CacheArray::preinsert(const Address lineAddr, const MemReq* req, Address* wbLineAddr) {
     uint32_t set = hf->hash(0, lineAddr) & (numSets - 1);
 
-    makeSpace(set, getCompressedSizeFromAddr(req->lineAddr), req);
+    makeSpace(set, getCompressedSizeFromAddr(req->lineAddr, compressionAlgorithm), req);
     *wbLineAddr = 0;                    // only works beyond coherence!
 
     // now find empty entry
@@ -155,7 +157,7 @@ void CacheArray::postinsert(const Address lineAddr, const MemReq* req, uint32_t 
     
     uint32_t set = lineId / setSizeInBytes; // hf->hash(0, lineAddr) % numSets;
 
-    uint32_t compressedSize = getCompressedSizeFromAddr(req->lineAddr);
+    uint32_t compressedSize = getCompressedSizeFromAddr(req->lineAddr, compressionAlgorithm);
     entries[lineId].lineAddr = lineAddr;
     entries[lineId].size = compressedSize;
     setAvailableSpace[set] -= compressedSize;

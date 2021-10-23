@@ -9,6 +9,7 @@
 #include <iomanip>
 
 extern unsigned BDICompress(char * buffer, unsigned _blockSize);
+extern unsigned FPCCompress(char * buffer, unsigned _blockSize);
 extern unsigned GeneralCompress(char * buffer, unsigned _blockSize, unsigned compress);
 
 namespace compressed {
@@ -18,7 +19,7 @@ class Cands;
 class CacheArray
         : public ::CacheArray {
     public:
-        CacheArray(uint32_t _numBlocks, uint32_t _associativity, HashFamily* _hf, uint32_t _extraTagRatio);
+        CacheArray(uint32_t _numBlocks, uint32_t _associativity, HashFamily* _hf, uint32_t _extraTagRatio, const char* _compressionAlgorithm);
         virtual ~CacheArray();
 
         int32_t lookup(const Address lineAddr, const MemReq* req, bool updateReplacement, bool fullyInvalidate);
@@ -28,13 +29,26 @@ class CacheArray
         uint32_t getNumLines() const { return numEntries; }
         void init(::ReplPolicy* _rp) { rp = _rp; }
         void clear() { panic("not implemented"); }
-        inline uint32_t getCompressedSizeFromAddr(Address addr) {
+        inline uint32_t getCompressedSizeFromAddr(Address addr, const char * compressionAlgorithm) {
             // return blockSize;
             char buffer[ blockSize ];
             PIN_SafeCopy(buffer, (void*)(addr << lineBits), blockSize);
             //size_t ncopied = PIN_SafeCopy(buffer, (void*)(addr << lineBits), blockSize);
             //if (ncopied != blockSize) warn("compressed::CacheArray - Only copied %lu bytes (out of %u)", ncopied, blockSize);
-            uint32_t size = BDICompress(buffer, blockSize);
+	    uint32_t size;
+	    if (strcmp(compressionAlgorithm, "BDI") == 0){
+		size = BDICompress(buffer, blockSize);
+	    }
+	    else if (strcmp(compressionAlgorithm,"FPC") == 0){
+		size = FPCCompress(buffer, blockSize);
+	    }
+	    else{
+		size = BDICompress(buffer, blockSize);
+		panic ("Did not choose algorithm, go with BDI.");	
+	    }
+
+	    
+
             //info("BDICompress: addr %lx size %u", addr << 6, size);
             return size;
             //return BDICompress(buffer, blockSize);

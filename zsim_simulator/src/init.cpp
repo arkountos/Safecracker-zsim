@@ -173,7 +173,14 @@ BaseCache* BuildCacheBank(Config& config, const string& prefix, g_string& name, 
         array = new IdealLRUPartArray(numLines);
     } else if (arrayType == "Compressed") {
         uint32_t extraTagRatio = config.get<uint32_t>(prefix + "array.extraTagRatio", zinfo->lineSize);
-        array = new compressed::CacheArray(numLines, ways, hf, extraTagRatio);
+	/*
+	 * START OF MY INSERTED CODE 
+	 *
+	 */
+	uint32_t compressionAlgorithm = config.get<const char*>(prefix + "array.compressionAlgorithm");
+
+	
+        array = new compressed::CacheArray(numLines, ways, hf, extraTagRatio, compressionAlgorithm);
         warn("init compressed::CacheArray -- Setting numLines to the array's numLines. This will not work for everything!");
         numLines = array->getNumLines();
     } else {
