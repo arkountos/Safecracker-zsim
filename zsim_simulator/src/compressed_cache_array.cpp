@@ -11,14 +11,12 @@ CacheArray::CacheArray(
     uint32_t _numBlocks,
     uint32_t _associativity,
     HashFamily* _hf,
-    uint32_t _extraTagRatio,
-    const char* _compressionAlgorithm)
+    uint32_t _extraTagRatio)
         : blockSize(zinfo->lineSize)
         , associativity(_associativity)
         , rp(0)
         , hf(_hf)
-        , extraTagRatio(_extraTagRatio)
-	, compressionAlgorithm(_compressionAlgorithm) {
+        , extraTagRatio(_extraTagRatio) {
 
     numSets = _numBlocks / _associativity;
     setSizeInBytes = blockSize * _associativity;
@@ -44,6 +42,14 @@ CacheArray::~CacheArray() {
     gm_free(entries);
 }
 
+// ------
+// Adding initStats implementation as seen in cache_arrays.cpp for the SetAssoc cache
+void CacheArray::initStats(AggregateStat* parentStat){
+	compressionCalls.init("CompressionCalls","# of times the compression algorithm was called");
+	parentStat->append(&compressionCalls);
+}
+//
+
 // look for the address, but only return a hit if its size hasn't changed.
 // otherwise, its effectively a miss, so remove the entry if it exists.
 int32_t CacheArray::lookup(const Address lineAddr, const MemReq* req, bool updateReplacement, bool fullyInvalidate) {
@@ -60,7 +66,10 @@ int32_t CacheArray::lookup(const Address lineAddr, const MemReq* req, bool updat
             // if size of the line changes on a write, we may be
             // forced to evict lines to make space
             if (!IsGet(req->type)) {
-                uint32_t compressedSize = getCompressedSizeFromAddr(req->lineAddr, compressionAlgorithm);
+		// --------
+		compressionCalls.inc();
+		// --------
+                uint32_t compressedSize = getCompressedSizeFromAddr(req->lineAddr);
                 // bigger lines need space: make space for the line, starting by evicting it
                 if (compressedSize > entries[id].size) {
                     entries[id].lineAddr = 0; // this makes sure the replacement policy won't try to evict id
@@ -139,7 +148,7 @@ void CacheArray::makeSpace(uint32_t set, uint32_t requiredSpace, const MemReq* r
 uint32_t CacheArray::preinsert(const Address lineAddr, const MemReq* req, Address* wbLineAddr) {
     uint32_t set = hf->hash(0, lineAddr) & (numSets - 1);
 
-    makeSpace(set, getCompressedSizeFromAddr(req->lineAddr, compressionAlgorithm), req);
+    makeSpace(set, getCompressedSizeFromAddr(req->lineAddr), req);
     *wbLineAddr = 0;                    // only works beyond coherence!
 
     // now find empty entry
@@ -157,7 +166,10 @@ void CacheArray::postinsert(const Address lineAddr, const MemReq* req, uint32_t 
     
     uint32_t set = lineId / setSizeInBytes; // hf->hash(0, lineAddr) % numSets;
 
-    uint32_t compressedSize = getCompressedSizeFromAddr(req->lineAddr, compressionAlgorithm);
+    // ------
+    compressionCalls.inc();
+    // ------
+    uint32_t compressedSize = getCompressedSizeFromAddr(req->lineAddr);
     entries[lineId].lineAddr = lineAddr;
     entries[lineId].size = compressedSize;
     setAvailableSpace[set] -= compressedSize;

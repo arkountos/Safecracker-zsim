@@ -9,7 +9,6 @@
 #include <iomanip>
 
 extern unsigned BDICompress(char * buffer, unsigned _blockSize);
-extern unsigned FPCCompress(char * buffer, unsigned _blockSize);
 extern unsigned GeneralCompress(char * buffer, unsigned _blockSize, unsigned compress);
 
 namespace compressed {
@@ -19,36 +18,29 @@ class Cands;
 class CacheArray
         : public ::CacheArray {
     public:
-        CacheArray(uint32_t _numBlocks, uint32_t _associativity, HashFamily* _hf, uint32_t _extraTagRatio, const char* _compressionAlgorithm);
+        CacheArray(uint32_t _numBlocks, uint32_t _associativity, HashFamily* _hf, uint32_t _extraTagRatio);
         virtual ~CacheArray();
 
         int32_t lookup(const Address lineAddr, const MemReq* req, bool updateReplacement, bool fullyInvalidate);
         uint32_t preinsert(const Address lineAddr, const MemReq* req, Address* wbLineAddr);
         void postinsert(const Address lineAddr, const MemReq* req, uint32_t lineId);
 
+	//------
+	// We also add initStats
+	void initStats(AggregateStat* parent);
+	//
+
         uint32_t getNumLines() const { return numEntries; }
         void init(::ReplPolicy* _rp) { rp = _rp; }
         void clear() { panic("not implemented"); }
-        inline uint32_t getCompressedSizeFromAddr(Address addr, const char * compressionAlgorithm) {
+        inline uint32_t getCompressedSizeFromAddr(Address addr) {
             // return blockSize;
             char buffer[ blockSize ];
             PIN_SafeCopy(buffer, (void*)(addr << lineBits), blockSize);
             //size_t ncopied = PIN_SafeCopy(buffer, (void*)(addr << lineBits), blockSize);
             //if (ncopied != blockSize) warn("compressed::CacheArray - Only copied %lu bytes (out of %u)", ncopied, blockSize);
-	    uint32_t size;
-	    if (strcmp(compressionAlgorithm, "BDI") == 0){
-		size = BDICompress(buffer, blockSize);
-	    }
-	    else if (strcmp(compressionAlgorithm,"FPC") == 0){
-		size = FPCCompress(buffer, blockSize);
-	    }
-	    else{
-		size = BDICompress(buffer, blockSize);
-		panic ("Did not choose algorithm, go with BDI.");	
-	    }
-
-	    
-
+            uint32_t size = BDICompress(buffer, blockSize);
+	    //compressionCalls++;
             //info("BDICompress: addr %lx size %u", addr << 6, size);
             return size;
             //return BDICompress(buffer, blockSize);
@@ -67,6 +59,11 @@ class CacheArray
                 Address lineAddr;
                 uint32_t size;
         };
+	
+	// -----
+	// My stat to count compression calls
+	Counter compressionCalls;
+	// -----
 
         uint32_t blockSize;
         uint32_t associativity;
@@ -88,7 +85,6 @@ class CacheArray
         // is somehow limited. The original implementation has number of entries = bytes,
         // which means 64X more tags for 64B cache lines.
         uint32_t extraTagRatio;
-	const char * compressionAlgorithm;
 
         friend class compressed::Cands;
 };
