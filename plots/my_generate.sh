@@ -6,7 +6,7 @@ ZSIM=./../zsim_simulator/build/opt/zsim
 cd ../heap_spray/
 
 rm stats_time.out
-for n in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do
+for n in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
     cp heap_spray.cfg /tmp/heap_spray.cfg
     counter=$(($n * 65536 / 20))
     cat /tmp/heap_spray.cfg | sed "s/server [0-9 ]*/server 2 $counter/" | sed "s/attacker [0-9 ]*/attacker 2/" > heap_spray.cfg
