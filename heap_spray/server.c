@@ -16,11 +16,6 @@ unsigned char* KEYADDR;
 long  KEYSET;
 long  KEYOFFSET;
 int SECRETSIZE;
-// -----
-// My additions to set a fixed key for testing
-int SECRETVALUE1;
-int SECRETVALUE2;
-// -----
 unsigned char buffer[BUFFERSIZE];
 
 void nothing(){}
@@ -38,18 +33,12 @@ void copy_data(char *attacker_text, int len, int offset);
 void cipher();
 void write_around_key(char *buffer);
 
-void initialize_key(int val1, int val2){
+void initialize_key(){
   KEYADDR = malloc(SECRETSIZE);
 
-  /* ------
-    Instead of this:
-
-  //for(int x = 0; x < SECRETSIZE; x++){
-    //KEYADDR[x] = (x*183+41)%256;
-  //}
-    
-    We use fixed addresses? Shouldn't we use fixed values instead?
-  */
+  for(int x = 0; x < SECRETSIZE; x++){
+    KEYADDR[x] = (x*183+41)%256;
+  }
 
   printf("[S] Key is: ");
   for(int x = 0; x < SECRETSIZE; x++){
@@ -66,12 +55,7 @@ void accessKey(){
 }
 
 void main(int argc, char *argv[]){
-  //SECRETSIZE = argc > 1 ? atoi(argv[1]) : 4;
-  SECRETSIZE = argv[0];
-  SECRETVALUE1 = argv[1];
-  SECRETVALUE2 = argv[2];
-  
-
+  SECRETSIZE = argc > 1 ? atoi(argv[1]) : 4;
 
   unlink(SOCKET_NAME);
 
