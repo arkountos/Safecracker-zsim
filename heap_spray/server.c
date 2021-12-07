@@ -11,14 +11,30 @@
 
 #include "../common/zsim_hooks.h"
 
+
+
 unsigned char* ATTACKER_ADDR;
 unsigned char* KEYADDR;
 long  KEYSET;
 long  KEYOFFSET;
 int SECRETSIZE;
+// -----
+// My additions to set a fixed key for testing
+int SECRETVALUE;
+// -----
 unsigned char buffer[BUFFERSIZE];
 
 void nothing(){}
+
+unsigned char* int_to_bytes(int input){
+	static unsigned char arr[2];
+	arr[1] = (unsigned)input & 0xff;
+	arr[0] = (unsigned)input >> 8;
+	printf("[TESTING] The two values: %d, %d\n", arr[0], arr[1]);
+	//printf("[S] From %d, we get %d and %d.", input, atoi(msb), atoi(lsb) );
+	return arr;
+}
+
 
 void printline(){
     printf("[S] Line of the key: [");
@@ -33,20 +49,36 @@ void copy_data(char *attacker_text, int len, int offset);
 void cipher();
 void write_around_key(char *buffer);
 
-void initialize_key(){
+/* This initializes the key address, not the value. The value is set with set_secret! */
+void initialize_key(int s){
   KEYADDR = malloc(SECRETSIZE);
 
-  for(int x = 0; x < SECRETSIZE; x++){
-    //KEYADDR[x] = (x*183+41)%256;
-    // Just for testing FPC 1b
-    KEYADDR[x] = rand() % 256;
+    for(int x = 0; x < SECRETSIZE; x++){
+    KEYADDR[x] = (x*183+41)%256;
   }
-
-  printf("[S] Key is: ");
+  
+  /*printf("[S] Key is: ");
   for(int x = 0; x < SECRETSIZE; x++){
     printf("%u,", KEYADDR[x]);
   }
   printf("\n");
+  */
+  // --------
+  /*printf("[S] But now I call set_secret!\n");
+  char c1 = (char)s1;
+  char c2 = (char)s2;
+  char* input_secret;
+  input_secret = (char*)malloc(SECRETSIZE*sizeof(char));
+  input_secret[0] = c1;
+  input_secret[1] = c2;
+  printf("[S] Built buffer is: %i, %u=i\n", input_secret[0], input_secret[1]);
+  */
+  unsigned char* input_secret = int_to_bytes(s);
+  unsigned char input_array[2];
+  input_array[0] = *input_secret;
+  input_array[1] = *(input_secret+1);
+  printf("[S] Input array is: %d, %d\n", (int)input_array[0], (int)input_array[1]);
+  set_secret(input_array);
 }
 
 void accessKey(){
@@ -57,13 +89,17 @@ void accessKey(){
 }
 
 void main(int argc, char *argv[]){
-  SECRETSIZE = argc > 1 ? atoi(argv[1]) : 4;
+  //SECRETSIZE = argc > 1 ? atoi(argv[1]) : 4;
+  SECRETSIZE = atoi(argv[1]);
+  SECRETVALUE = atoi(argv[2]);
+  
+  printf("[S] Passes argument input.");
 
   unlink(SOCKET_NAME);
 
   ATTACKER_ADDR = malloc(100);
   char *garbage = malloc(10000);
-  initialize_key();
+  initialize_key(SECRETVALUE);
 
   KEYSET = ((long) KEYADDR / LINESIZE) % NUM_SETS;
   KEYOFFSET = ((long) KEYADDR) % LINESIZE;
@@ -162,6 +198,7 @@ void main(int argc, char *argv[]){
 }
 
 void set_secret(unsigned char *secret){
+  //printf("[S] Reaches here!\n");
   memcpy(KEYADDR, secret, SECRETSIZE);
   printf("[S] Secret set with value ");
   for(int i = 0; i < SECRETSIZE; i++) printf("%i,", secret[i]);
