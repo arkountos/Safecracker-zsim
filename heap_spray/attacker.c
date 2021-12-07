@@ -9,7 +9,12 @@
 #include "../common/cache_manipulation.h"
 
 #include "../common/zsim_hooks.h"
-#include "../bdi_exploit/steal_bytes.h"
+#include "../fpc_exploit/steal_bytes.h"
+
+/* This is commented out, right?
+ * #include "../bdi_exploit/steal_bytes.h"
+ */
+
 
 #define LINESIZE 64
 
@@ -94,7 +99,11 @@ int main(int argc, char *argv[]){
   unsigned char answer[KEYSIZE];
   bzero(answer, KEYSIZE);
   // Call to the process to get the secret
-  steal(buffer, answer, &observe_modifications, &send_buffer, KEYSIZE);
+  // The last argument is the compression algorithm with:
+  // 0 -> BDI
+  // 1 -> FPC
+  // Don't forget to include the correct from bdi_exploit/steal_bytes.c or fpc_exploit/steal_bytes.c from the top!
+  steal(buffer, answer, &observe_modifications, &send_buffer, KEYSIZE, 1);
   
   printf("[A] Secret value is: ");
   for(int i = 0; i < KEYSIZE; i++) printf("%u,", answer[i]);

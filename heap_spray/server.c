@@ -38,7 +38,7 @@ void copy_data(char *attacker_text, int len, int offset);
 void cipher();
 void write_around_key(char *buffer);
 
-void initialize_key(int val1, int val2){
+void initialize_key(){
   KEYADDR = malloc(SECRETSIZE);
 
   /* ------
