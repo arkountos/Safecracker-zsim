@@ -164,6 +164,7 @@ int get_evicted_lines(int set, void(*accessSecret)(), void(*flush)()){
   return lines_evicted;
 }
 
+/* This should be tweaked to work for FPC! */
 int get_set(void (*flush)(), void (*accessKey)(), void (*dummy_access)()){
   int sets[NUM_SETS];
   int cases = 5;

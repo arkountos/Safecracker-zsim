@@ -11,11 +11,6 @@
 #include "../common/zsim_hooks.h"
 #include "../fpc_exploit/steal_bytes.h"
 
-/* This is commented out, right?
- * #include "../bdi_exploit/steal_bytes.h"
- */
-
-
 #define LINESIZE 64
 
 long KEYSET;
