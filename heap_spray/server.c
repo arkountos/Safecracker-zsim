@@ -37,7 +37,9 @@ void initialize_key(){
   KEYADDR = malloc(SECRETSIZE);
 
   for(int x = 0; x < SECRETSIZE; x++){
-    KEYADDR[x] = (x*183+41)%256;
+    //KEYADDR[x] = (x*183+41)%256;
+    // Just for testing FPC 1b
+    KEYADDR[x] = rand() % 256;
   }
 
   printf("[S] Key is: ");
