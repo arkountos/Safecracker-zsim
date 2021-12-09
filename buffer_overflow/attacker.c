@@ -168,7 +168,7 @@ void my_send_buffer(char *to_send, int keysize, int position){
   // Write before the secret...
   memcpy(&buffer[129], to_send, LINESIZE-keysize+position);
   // ...and after the secret.
-  memcpy(&buffer[129+LINESIZE-keysize+position], to_send, keysize-position);
+  memcpy(&buffer[129+LINESIZE-keysize+position+1 /*not sure about +1*/], to_send, keysize-position);
 
   bzero(&buffer[LINESIZE*3+1-keysize], 8); // Point to stop
   // I think no need to change, it is 3 cache lines down.
