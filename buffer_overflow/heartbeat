@@ -1,9 +1,9 @@
 Running on: vagrant-ubuntu-trusty-64
-Start time: Thu Dec  9 14:22:38 2021
-Heartbeat time: Thu Dec  9 14:22:58 2021
+Start time: Thu Dec  9 14:44:27 2021
+Heartbeat time: Thu Dec  9 14:44:47 2021
 Stats since start:
- 44768 phases
- 44768000 cycles
- 2238400 cycles/s
-Stats since last heartbeat (9s):
- 3183333 cycles/s
+ 26625 phases
+ 26625000 cycles
+ 1331250 cycles/s
+Stats since last heartbeat (10s):
+ 2661200 cycles/s
