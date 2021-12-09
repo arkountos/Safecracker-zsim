@@ -40,7 +40,7 @@ void initialize_key(){
   KEYADDR = malloc(SECRETSIZE);
 
   for(int x = 0; x < SECRETSIZE; x++){
-    KEYADDR[x] = 255;
+    KEYADDR[x] = 155;
   }
 
   printf("[S] Key is: ");
