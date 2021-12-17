@@ -9,7 +9,7 @@
 #include "../common/cache_manipulation.h"
 
 #include "../common/zsim_hooks.h"
-#include "../fpc_exploit/steal_bytes.h"
+#include "../bdi_exploit/steal_bytes.h"
 
 #define LINESIZE 64
 
@@ -98,7 +98,7 @@ int main(int argc, char *argv[]){
   // 0 -> BDI
   // 1 -> FPC
   // Don't forget to include the correct from bdi_exploit/steal_bytes.c or fpc_exploit/steal_bytes.c from the top!
-  steal(buffer, answer, &observe_modifications, &send_buffer, KEYSIZE, 1);
+  steal(buffer, answer, &observe_modifications, &send_buffer, KEYSIZE/*, 1*/);
   
   printf("[A] Secret value is: ");
   for(int i = 0; i < KEYSIZE; i++) printf("%u,", answer[i]);

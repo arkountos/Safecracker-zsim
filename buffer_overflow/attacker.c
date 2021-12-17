@@ -196,5 +196,6 @@ void relax(){}
 
 unsigned observe_modifications(void (*access)()){
   access();
-  return get_size(KEYSET, access, &flush);
+  printf("[A] Calling get_size()\n");
+  return fpc_bruteforce_get_size(KEYSET, access, &flush);
 }

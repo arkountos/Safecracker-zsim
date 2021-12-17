@@ -9,6 +9,7 @@
 #include <iomanip>
 
 extern unsigned BDICompress(char * buffer, unsigned _blockSize);
+extern unsigned FPCCompress(char * buffer, unsigned _blockSize);
 extern unsigned GeneralCompress(char * buffer, unsigned _blockSize, unsigned compress);
 
 namespace compressed {
@@ -39,7 +40,7 @@ class CacheArray
             PIN_SafeCopy(buffer, (void*)(addr << lineBits), blockSize);
             //size_t ncopied = PIN_SafeCopy(buffer, (void*)(addr << lineBits), blockSize);
             //if (ncopied != blockSize) warn("compressed::CacheArray - Only copied %lu bytes (out of %u)", ncopied, blockSize);
-            uint32_t size = BDICompress(buffer, blockSize);
+            uint32_t size = FPCCompress(buffer, blockSize);
 	    //compressionCalls++;
             //info("BDICompress: addr %lx size %u", addr << 6, size);
             return size;

@@ -1,0 +1,10 @@
+.vagrant/*
+*.h5
+*.out
+*.cfg
+*.log
+/heap_spray/heartbeat
+/heap_spray/attacker
+/heap_spray/server
+/heap_spray/*.cfg
+/zsim_simulator/build/*
